@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+
+    <title>Hello, world!</title>
+
+    <style>
+        .material-switch > input[type="checkbox"] {
+            display: none;
+        }
+
+        .material-switch > label {
+            cursor: pointer;
+            height: 0px;
+            position: relative;
+            width: 40px;
+        }
+
+        .material-switch > label::before {
+            background: rgb(0, 0, 0);
+            box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            content: '';
+            height: 16px;
+            margin-top: -8px;
+            position: absolute;
+            opacity: 0.3;
+            transition: all 0.4s ease-in-out;
+            width: 40px;
+        }
+
+        .material-switch > label::after {
+            background: rgb(255, 255, 255);
+            border-radius: 16px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+            content: '';
+            height: 24px;
+            left: -4px;
+            margin-top: -8px;
+            position: absolute;
+            top: -4px;
+            transition: all 0.3s ease-in-out;
+            width: 24px;
+        }
+
+        .material-switch > input[type="checkbox"]:checked + label::before {
+            background: inherit;
+            opacity: 0.5;
+        }
+
+        .material-switch > input[type="checkbox"]:checked + label::after {
+            background: inherit;
+            left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Actions</h3>
+            <div class="tabbable">
+                <ul class="nav nav-pills nav-stacked col-md-3">
+                    <li class="active"><a href="#feeder-automaton" data-toggle="tab">Feeder Automaton</a></li>
+                    <li><a href="#live-stream" data-toggle="tab">Live Stream</a></li>
+                </ul>
+                <div class="tab-content col-md-9">
+                    <div class="tab-pane active" id="feeder-automaton">
+                        <li class="list-group-item">
+                            Control Feeder Automaton
+                            <div class="material-switch pull-right">
+                                <input id="someSwitchOptionSuccess" name="someSwitchOption001" type="checkbox" {% if
+                                       automaton_state %} checked {% endif %}/>
+                                <label for="someSwitchOptionSuccess" class="label-success"></label>
+                            </div>
+                        </li>
+                    </div>
+                    <div class="tab-pane" id="live-stream">TBD</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $("#someSwitchOptionSuccess").change(function () {
+        var value = $(this).is(':checked');
+        $.ajax({
+            type: 'POST',
+            url: '/api',
+            data: JSON.stringify({"value": value}),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+        })
+    });
+</script>
+
+</body>
+</html>
