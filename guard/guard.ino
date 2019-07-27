@@ -1,21 +1,16 @@
-
-/**
-   Author Teemu Mäntykallio
-   Initializes the library and turns the motor in alternating directions.
-*/
 #include <TMC2130Stepper.h>
 
-#define EN_PIN    7          // Nano v3:  16 Mega:  38  //enable (CFG6)
-#define DIR_PIN  8          //      19      55  //direction
-#define STEP_PIN  9         //      18      54  //step
-#define CS_PIN    10          //      17      64  //chip select
-#define INPUT1_PIN    2       //      17      64  //chip select
-#define INPUT2_PIN    3       //      17      64  //chip select
-#define ARDUINO_OUT_RASP_IN    5
-#define ARDUINO_IN_RASP_OUT    6
+#define EN_PIN                  7       // Nano v3:  16 Mega:  38  //enable (CFG6)
+#define DIR_PIN                 8       //      19      55  //direction
+#define STEP_PIN                9       //      18      54  //step
+#define CS_PIN                  10      //      17      64  //chip select
+#define INPUT1_PIN              2       //      17      64  //chip select
+#define INPUT2_PIN              3       //      17      64  //chip select
+#define ARDUINO_OUT_RASP_IN     5
+#define ARDUINO_IN_RASP_OUT     6
 
-bool dir = true;
-int feedMe = 0;
+
+int feedSignal = 0;
 typedef enum gateState { INITIAL, OPENED, OPENING, CLOSED, CLOSING };
 typedef enum switchState { ACTIVE, NOT_ACTIVE };
 
@@ -30,9 +25,9 @@ void setup() {
   Serial.println("Start...");
   SPI.begin();
   pinMode(MISO, INPUT_PULLUP);
-  driver.begin();       // Initiate pins and registeries
-  driver.rms_current(400);  // Set stepper current to 600mA. The command is the same as command TMC2130.setCurrent(600, 0.11, 0.5);
-  //driver.stealthChop(2);  // Enable extremely quiet stepping
+  driver.begin();             // Initiate pins and registeries
+  driver.rms_current(400);    // Set stepper current to 600mA. The command is the same as command TMC2130.setCurrent(600, 0.11, 0.5);
+  //driver.stealthChop(2);    // Enable extremely quiet stepping
   driver.en_pwm_mode(1);      // Enable extremely quiet stepping
   driver.pwm_autoscale(1);
 
@@ -40,6 +35,14 @@ void setup() {
   pinMode(INPUT1_PIN, INPUT_PULLUP);
   pinMode(INPUT2_PIN, INPUT_PULLUP);
   digitalWrite(EN_PIN, LOW);
+}
+
+void turnOnMotor() {
+  digitalWrite(EN_PIN, LOW);
+}
+
+void turnOffMotor() {
+  digitalWrite(EN_PIN, HIGH);
 }
 
 void generatePulse() {
@@ -50,13 +53,13 @@ void generatePulse() {
 }
 
 void closeTheGate() {
-  digitalWrite(EN_PIN, LOW);
+  turnOnMotor();
   generatePulse();
   driver.shaft_dir(0);
 }
 
 void openTheGate() {
-  digitalWrite(EN_PIN, LOW);
+  turnOnMotor();
   generatePulse();
   driver.shaft_dir(1);
 }
@@ -68,13 +71,13 @@ void handleInitialState(switchState limitSwitchFullyClosed) {
   }
   else {
     gateCurrentState = CLOSED;
-    digitalWrite(EN_PIN, HIGH); // cut the power
+    turnOffMotor();
   }
 }
 
 void loop() {
   // Read Raspberry out
-  feedMe = digitalRead(ARDUINO_IN_RASP_OUT);
+  feedSignal = digitalRead(ARDUINO_IN_RASP_OUT);
   // Read switch states
   limitSwitchFullyOpen = (switchState) digitalRead(INPUT1_PIN);
   limitSwitchFullyClosed = (switchState) digitalRead(INPUT2_PIN);
@@ -87,12 +90,14 @@ void loop() {
     if ((switchState) limitSwitchFullyOpen == ACTIVE) {
       gateCurrentState = OPENED;
       digitalWrite(ARDUINO_OUT_RASP_IN, HIGH);
+      turnOffMotor();
     }
     else if ((switchState) limitSwitchFullyClosed == ACTIVE) {
       gateCurrentState = CLOSED;
       digitalWrite(ARDUINO_OUT_RASP_IN, LOW);
+      turnOffMotor();
     }
-    if (feedMe == 1) {
+    if (feedSignal == 1) {
       if ((gateCurrentState == CLOSED) || (gateCurrentState == CLOSING)) {
         gateCurrentState = OPENING;
       }
@@ -109,43 +114,5 @@ void loop() {
       }
     }
   }
-
-
-  //  else {
-  //    if (feedMe == 1) {
-  //      if ((gateCurrentState == CLOSE) || ((switchState) limitSwitchFullyOpen == NOT_ACTIVE)) {
-  //        openTheGate();
-  //        gateCurrentState = OPEN;
-  //      }
-  //    }
-  //    else if (feedMe == 0) {
-  //      if ((gateCurrentState == OPEN) || ((switchState) limitSwitchFullyClosed == ACTIVE)) {
-  //        //Serial.println("Closing");
-  //        closeTheGate();
-  //      }
-  //    }
-  //  }
-
-
-
-  //if (feedMe == 1) {
-  //  Serial.println("Rasp High");
-  //  digitalWrite(EN_PIN, HIGH);
-  //  driver.shaft_dir(1);
-  //}
-  //
-  //// fully open
-  //if (limitSwitch_1 == 0) {
-  //  //Serial.println("Dir -> 0");
-  //  driver.shaft_dir(0);
-  //  digitalWrite(EN_PIN, HIGH);
-  //}
-  //
-  //// fully close
-  //if (limitSwitch_2 == 0) {
-  //  //Serial.println("Dir -> 1");
-  //  driver.shaft_dir(1);
-  //  digitalWrite(EN_PIN, HIGH);
-  //}
 
 }
